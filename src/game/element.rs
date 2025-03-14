@@ -146,6 +146,7 @@ impl<T: Mask> Gcd for T {
     }
 }
 
+#[expect(clippy::too_many_arguments)]
 pub fn full_print_row(
     height: usize,
     width: usize,

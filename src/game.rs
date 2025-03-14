@@ -207,6 +207,7 @@ impl Game {
         let rule_in = rule.rule_in();
         for row in 0..r_height {
             for col in 0..r_width {
+                #[expect(clippy::neg_cmp_op_on_partial_ord)]
                 if !(rule_in.cells[row][col] >= self.cells[row_s + row][col_s + col]) {
                     return None;
                 }
@@ -214,6 +215,7 @@ impl Game {
         }
         for row in 0..=r_height {
             for col in 0..r_width {
+                #[expect(clippy::neg_cmp_op_on_partial_ord)]
                 if !(rule_in.hlinks[row][col] >= self.hlinks[row_s + row][col_s + col]) {
                     return None;
                 }
@@ -221,6 +223,7 @@ impl Game {
         }
         for row in 0..r_height {
             for col in 0..=r_width {
+                #[expect(clippy::neg_cmp_op_on_partial_ord)]
                 if !(rule_in.vlinks[row][col] >= self.vlinks[row_s + row][col_s + col]) {
                     return None;
                 }
@@ -228,6 +231,7 @@ impl Game {
         }
         for row in 0..2 * r_height {
             for col in 0..2 * r_width {
+                #[expect(clippy::neg_cmp_op_on_partial_ord)]
                 if !(rule_in.corners[row][col] >= self.corners[2 * row_s + row][2 * col_s + col]) {
                     return None;
                 }

@@ -102,21 +102,25 @@ impl HalfRule {
         let mut hlinks = vec![vec![LMaybe; width]; height + 1];
         let mut vlinks = vec![vec![LMaybe; width + 1]; height];
         let mut corners = vec![vec![CMaybe; 2 * width]; 2 * height];
+        #[expect(clippy::needless_range_loop)]
         for row in 0..height {
             for col in 0..width {
                 cells[row][col] = self.cells[col][height - 1 - row];
             }
         }
+        #[expect(clippy::needless_range_loop)]
         for row in 0..=height {
             for col in 0..width {
                 hlinks[row][col] = self.vlinks[col][height - row];
             }
         }
+        #[expect(clippy::needless_range_loop)]
         for row in 0..height {
             for col in 0..=width {
                 vlinks[row][col] = self.hlinks[col][height - 1 - row];
             }
         }
+        #[expect(clippy::needless_range_loop)]
         for row in 0..2 * height {
             for col in 0..2 * width {
                 corners[row][col] = self.corners[col][2 * height - 1 - row];
@@ -133,10 +137,26 @@ impl HalfRule {
     }
 
     fn reversed_lr(&self) -> HalfRule {
-        let cells = self.cells.iter().map(|row| row.iter().copied().rev().collect()).collect();
-        let hlinks = self.hlinks.iter().map(|row| row.iter().copied().rev().collect()).collect();
-        let vlinks = self.vlinks.iter().map(|row| row.iter().copied().rev().collect()).collect();
-        let corners = self.corners.iter().map(|row| row.iter().copied().rev().collect()).collect();
+        let cells = self
+            .cells
+            .iter()
+            .map(|row| row.iter().copied().rev().collect())
+            .collect();
+        let hlinks = self
+            .hlinks
+            .iter()
+            .map(|row| row.iter().copied().rev().collect())
+            .collect();
+        let vlinks = self
+            .vlinks
+            .iter()
+            .map(|row| row.iter().copied().rev().collect())
+            .collect();
+        let corners = self
+            .corners
+            .iter()
+            .map(|row| row.iter().copied().rev().collect())
+            .collect();
         HalfRule {
             height: self.height,
             width: self.width,
@@ -163,10 +183,30 @@ impl HalfRule {
     }
 
     fn rotated_180(&self) -> HalfRule {
-        let cells = self.cells.iter().rev().map(|row| row.iter().copied().rev().collect()).collect();
-        let hlinks = self.hlinks.iter().rev().map(|row| row.iter().copied().rev().collect()).collect();
-        let vlinks = self.vlinks.iter().rev().map(|row| row.iter().copied().rev().collect()).collect();
-        let corners = self.corners.iter().rev().map(|row| row.iter().copied().rev().collect()).collect();
+        let cells = self
+            .cells
+            .iter()
+            .rev()
+            .map(|row| row.iter().copied().rev().collect())
+            .collect();
+        let hlinks = self
+            .hlinks
+            .iter()
+            .rev()
+            .map(|row| row.iter().copied().rev().collect())
+            .collect();
+        let vlinks = self
+            .vlinks
+            .iter()
+            .rev()
+            .map(|row| row.iter().copied().rev().collect())
+            .collect();
+        let corners = self
+            .corners
+            .iter()
+            .rev()
+            .map(|row| row.iter().copied().rev().collect())
+            .collect();
         HalfRule {
             height: self.height,
             width: self.width,
@@ -286,9 +326,6 @@ impl Rule {
             return vec![r90];
         }
         let refl = self.reversed_ud();
-        if *self == refl {
-            return vec![];
-        }
-        return vec![refl];
+        if *self == refl { vec![] } else { vec![refl] }
     }
 }
