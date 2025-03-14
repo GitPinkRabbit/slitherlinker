@@ -1,34 +1,5 @@
-use std::cmp::Ordering;
-
-#[derive(Clone, Copy, Eq, PartialEq, Debug)]
-enum CellType {
-    Empty,
-    Zero,
-    One,
-    Two,
-    Three,
-}
-use CellType::*;
-
-#[derive(Clone, Copy, Eq, PartialEq, Debug)]
-enum LinkType {
-    LMaybe,
-    Link,
-    Unlink,
-}
-use LinkType::*;
-
-#[derive(Clone, Copy, Eq, PartialEq, Debug)]
-enum CornerType {
-    CMaybe,
-    CZero,
-    COne,
-    CTwo,
-    Even,
-    Less,
-    Greater,
-}
-use CornerType::*;
+mod element;
+use element::*;
 
 fn full_print_row(
     height: usize,
@@ -318,122 +289,7 @@ impl Game {
     }
 }
 
-trait Mask {
-    fn to_mask(&self) -> u8;
-    fn from_mask(mask: u8) -> Self;
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        let mask = self.to_mask();
-        let other_mask = other.to_mask();
-        if mask == other_mask {
-            return Some(Ordering::Equal);
-        }
-        if mask & other_mask == mask {
-            return Some(Ordering::Less);
-        }
-        if mask & other_mask == other_mask {
-            return Some(Ordering::Greater);
-        }
-        None
-    }
-}
-
-impl Mask for CellType {
-    fn to_mask(&self) -> u8 {
-        match self {
-            Empty => 15,
-            Zero => 1,
-            One => 2,
-            Two => 4,
-            Three => 8,
-        }
-    }
-
-    fn from_mask(mask: u8) -> Self {
-        match mask {
-            15 => Empty,
-            1 => Zero,
-            2 => One,
-            4 => Two,
-            8 => Three,
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl Mask for LinkType {
-    fn to_mask(&self) -> u8 {
-        match self {
-            LMaybe => 3,
-            Link => 1,
-            Unlink => 2,
-        }
-    }
-
-    fn from_mask(mask: u8) -> Self {
-        match mask {
-            3 => LMaybe,
-            1 => Link,
-            2 => Unlink,
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl Mask for CornerType {
-    fn to_mask(&self) -> u8 {
-        match self {
-            CMaybe => 7,
-            CZero => 1,
-            COne => 2,
-            CTwo => 4,
-            Even => 5,
-            Less => 3,
-            Greater => 6,
-        }
-    }
-
-    fn from_mask(mask: u8) -> Self {
-        match mask {
-            7 => CMaybe,
-            1 => CZero,
-            2 => COne,
-            4 => CTwo,
-            5 => Even,
-            3 => Less,
-            6 => Greater,
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl PartialOrd for CellType {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Mask::partial_cmp(self, other)
-    }
-}
-
-impl PartialOrd for LinkType {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Mask::partial_cmp(self, other)
-    }
-}
-
-impl PartialOrd for CornerType {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Mask::partial_cmp(self, other)
-    }
-}
-
-trait Gcd {
-    fn gcd(&self, other: &Self) -> Self;
-}
-
-impl<T: Mask> Gcd for T {
-    fn gcd(&self, other: &Self) -> Self {
-        T::from_mask(self.to_mask() & other.to_mask())
-    }
-}
-
+#[derive(Clone, Eq, PartialEq, Debug)]
 struct HalfRule {
     height: usize,
     width: usize,
@@ -527,8 +383,91 @@ impl HalfRule {
             false,
         );
     }
+
+    fn rotated_90(&self) -> HalfRule {
+        let height = self.width;
+        let width = self.height;
+        let mut cells = vec![vec![Empty; width]; height];
+        let mut hlinks = vec![vec![LMaybe; width]; height + 1];
+        let mut vlinks = vec![vec![LMaybe; width + 1]; height];
+        let mut corners = vec![vec![CMaybe; 2 * width]; 2 * height];
+        for row in 0..height {
+            for col in 0..width {
+                cells[row][col] = self.cells[col][height - 1 - row];
+            }
+        }
+        for row in 0..=height {
+            for col in 0..width {
+                hlinks[row][col] = self.vlinks[col][height - row];
+            }
+        }
+        for row in 0..height {
+            for col in 0..=width {
+                vlinks[row][col] = self.hlinks[col][height - 1 - row];
+            }
+        }
+        for row in 0..2 * height {
+            for col in 0..2 * width {
+                corners[row][col] = self.corners[col][2 * height - 1 - row];
+            }
+        }
+        HalfRule {
+            height,
+            width,
+            cells,
+            hlinks,
+            vlinks,
+            corners,
+        }
+    }
+
+    fn reversed_lr(&self) -> HalfRule {
+        let cells = self.cells.iter().map(|row| row.iter().copied().rev().collect()).collect();
+        let hlinks = self.hlinks.iter().map(|row| row.iter().copied().rev().collect()).collect();
+        let vlinks = self.vlinks.iter().map(|row| row.iter().copied().rev().collect()).collect();
+        let corners = self.corners.iter().map(|row| row.iter().copied().rev().collect()).collect();
+        HalfRule {
+            height: self.height,
+            width: self.width,
+            cells,
+            hlinks,
+            vlinks,
+            corners,
+        }
+    }
+
+    fn reversed_ud(&self) -> HalfRule {
+        let cells = self.cells.iter().rev().cloned().collect();
+        let hlinks = self.hlinks.iter().rev().cloned().collect();
+        let vlinks = self.vlinks.iter().rev().cloned().collect();
+        let corners = self.corners.iter().rev().cloned().collect();
+        HalfRule {
+            height: self.height,
+            width: self.width,
+            cells,
+            hlinks,
+            vlinks,
+            corners,
+        }
+    }
+
+    fn rotated_180(&self) -> HalfRule {
+        let cells = self.cells.iter().rev().map(|row| row.iter().copied().rev().collect()).collect();
+        let hlinks = self.hlinks.iter().rev().map(|row| row.iter().copied().rev().collect()).collect();
+        let vlinks = self.vlinks.iter().rev().map(|row| row.iter().copied().rev().collect()).collect();
+        let corners = self.corners.iter().rev().map(|row| row.iter().copied().rev().collect()).collect();
+        HalfRule {
+            height: self.height,
+            width: self.width,
+            cells,
+            hlinks,
+            vlinks,
+            corners,
+        }
+    }
 }
 
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub struct Rule {
     name: String,
     rule_in: HalfRule,
@@ -565,6 +504,38 @@ impl Rule {
             );
             rule_out.full_print_row(row);
             println!();
+        }
+    }
+
+    fn rotated_90(&self) -> Rule {
+        Rule {
+            name: self.name.clone(),
+            rule_in: self.rule_in.rotated_90(),
+            rule_out: self.rule_out.rotated_90(),
+        }
+    }
+
+    fn reversed_lr(&self) -> Rule {
+        Rule {
+            name: self.name.clone(),
+            rule_in: self.rule_in.reversed_lr(),
+            rule_out: self.rule_out.reversed_lr(),
+        }
+    }
+
+    fn reversed_ud(&self) -> Rule {
+        Rule {
+            name: self.name.clone(),
+            rule_in: self.rule_in.reversed_ud(),
+            rule_out: self.rule_out.reversed_ud(),
+        }
+    }
+
+    fn rotated_180(&self) -> Rule {
+        Rule {
+            name: self.name.clone(),
+            rule_in: self.rule_in.rotated_180(),
+            rule_out: self.rule_out.rotated_180(),
         }
     }
 }
