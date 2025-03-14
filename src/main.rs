@@ -26,9 +26,22 @@ fn main() {
         .collect::<Vec<_>>();
     let rules = rules_texts
         .iter()
-        .map(|(name, content)| game::Rule::new(name, content))
+        .map(|(name, content)| {
+            let rule = game::Rule::new(name, content);
+            let mut v = rule.symmetries();
+            v.insert(0, rule);
+            v
+        })
         .collect::<Vec<_>>();
-    for rule in rules {
-        rule.print();
+    for rule_sym in &rules {
+        rule_sym[0].print();
+        println!("Number of symmetries: {}", rule_sym.len());
     }
+    let res = game.try_apply_rule(&rules[1][0], 4, 3);
+    assert_eq!(res, Some(true));
+    game.print_cells_and_links();
+    let res = game.try_apply_rule(&rules[1][0], 4, 3);
+    assert_eq!(res, Some(false));
+    let res = game.try_apply_rule(&rules[1][0], 4, 4);
+    assert_eq!(res, None);
 }

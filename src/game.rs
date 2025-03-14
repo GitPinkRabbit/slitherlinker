@@ -1,7 +1,7 @@
 mod element;
 mod rule;
 use element::*;
-pub use rule::*;
+pub use rule::Rule;
 
 pub struct Game {
     height: usize,
@@ -132,7 +132,7 @@ impl Game {
                     "+{}",
                     match self.hlinks[row][col] {
                         LMaybe => "...",
-                        Link => "===",
+                        Link => "---",
                         Unlink => "   ",
                     }
                 );
@@ -191,5 +191,90 @@ impl Game {
             );
             println!();
         }
+    }
+
+    pub fn try_apply_rule(&mut self, rule: &Rule, row_s: usize, col_s: usize) -> Option<bool> {
+        let height = self.height;
+        let width = self.width;
+        let r_height = rule.rule_in().height;
+        let r_width = rule.rule_in().width;
+        if r_height > height || r_width > width || row_s >= height || col_s >= width {
+            return None;
+        }
+        if height - row_s < r_height || width - col_s < r_width {
+            return None;
+        }
+        let rule_in = rule.rule_in();
+        for row in 0..r_height {
+            for col in 0..r_width {
+                if !(rule_in.cells[row][col] >= self.cells[row_s + row][col_s + col]) {
+                    return None;
+                }
+            }
+        }
+        for row in 0..=r_height {
+            for col in 0..r_width {
+                if !(rule_in.hlinks[row][col] >= self.hlinks[row_s + row][col_s + col]) {
+                    return None;
+                }
+            }
+        }
+        for row in 0..r_height {
+            for col in 0..=r_width {
+                if !(rule_in.vlinks[row][col] >= self.vlinks[row_s + row][col_s + col]) {
+                    return None;
+                }
+            }
+        }
+        for row in 0..2 * r_height {
+            for col in 0..2 * r_width {
+                if !(rule_in.corners[row][col] >= self.corners[2 * row_s + row][2 * col_s + col]) {
+                    return None;
+                }
+            }
+        }
+        let rule_out = rule.rule_out();
+        let mut modified = false;
+        for row in 0..r_height {
+            for col in 0..r_width {
+                let cell = &mut self.cells[row_s + row][col_s + col];
+                let new_cell = cell.gcd(&rule_out.cells[row][col]);
+                if *cell != new_cell {
+                    *cell = new_cell;
+                    modified = true;
+                }
+            }
+        }
+        for row in 0..=r_height {
+            for col in 0..r_width {
+                let link = &mut self.hlinks[row_s + row][col_s + col];
+                let new_link = link.gcd(&rule_out.hlinks[row][col]);
+                if *link != new_link {
+                    *link = new_link;
+                    modified = true;
+                }
+            }
+        }
+        for row in 0..r_height {
+            for col in 0..=r_width {
+                let link = &mut self.vlinks[row_s + row][col_s + col];
+                let new_link = link.gcd(&rule_out.vlinks[row][col]);
+                if *link != new_link {
+                    *link = new_link;
+                    modified = true;
+                }
+            }
+        }
+        for row in 0..2 * r_height {
+            for col in 0..2 * r_width {
+                let corner = &mut self.corners[2 * row_s + row][2 * col_s + col];
+                let new_corner = corner.gcd(&rule_out.corners[row][col]);
+                if *corner != new_corner {
+                    *corner = new_corner;
+                    modified = true;
+                }
+            }
+        }
+        Some(modified)
     }
 }

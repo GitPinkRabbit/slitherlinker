@@ -1,13 +1,13 @@
 use super::element::*;
 
 #[derive(Clone, Eq, PartialEq, Debug)]
-struct HalfRule {
-    height: usize,
-    width: usize,
-    cells: Vec<Vec<CellType>>,
-    hlinks: Vec<Vec<LinkType>>,
-    vlinks: Vec<Vec<LinkType>>,
-    corners: Vec<Vec<CornerType>>,
+pub(super) struct HalfRule {
+    pub(super) height: usize,
+    pub(super) width: usize,
+    pub(super) cells: Vec<Vec<CellType>>,
+    pub(super) hlinks: Vec<Vec<LinkType>>,
+    pub(super) vlinks: Vec<Vec<LinkType>>,
+    pub(super) corners: Vec<Vec<CornerType>>,
 }
 
 impl HalfRule {
@@ -188,15 +188,24 @@ pub struct Rule {
 impl Rule {
     pub fn new(name: &str, rule_str: &str) -> Rule {
         let mut parts = rule_str.trim().split("=>");
-        let rule = Rule {
-            name: name.to_owned(),
-            rule_in: HalfRule::new(parts.next().unwrap()),
-            rule_out: HalfRule::new(parts.next().unwrap()),
-        };
+        let rule_in = HalfRule::new(parts.next().unwrap());
+        let rule_out = HalfRule::new(parts.next().unwrap());
         assert!(parts.next().is_none());
-        assert_eq!(rule.rule_in.height, rule.rule_out.height);
-        assert_eq!(rule.rule_in.width, rule.rule_out.width);
-        rule
+        assert_eq!(rule_in.height, rule_out.height);
+        assert_eq!(rule_in.width, rule_out.width);
+        Rule {
+            name: name.to_owned(),
+            rule_in,
+            rule_out,
+        }
+    }
+
+    pub(super) fn rule_in(&self) -> &HalfRule {
+        &self.rule_in
+    }
+
+    pub(super) fn rule_out(&self) -> &HalfRule {
+        &self.rule_out
     }
 
     pub fn print(&self) {
@@ -248,5 +257,38 @@ impl Rule {
             rule_in: self.rule_in.rotated_180(),
             rule_out: self.rule_out.rotated_180(),
         }
+    }
+
+    pub fn symmetries(&self) -> Vec<Rule> {
+        let r180 = self.rotated_180();
+        if *self != r180 {
+            let r90 = self.rotated_90();
+            let r270 = r90.rotated_180();
+            let refl = self.reversed_ud();
+            if refl == *self || refl == r90 || refl == r180 || refl == r270 {
+                return vec![r180, r90, r270];
+            }
+            let refl2 = r90.reversed_ud();
+            let refl3 = r180.reversed_ud();
+            let refl4 = r270.reversed_ud();
+            return vec![r90, r180, r270, refl, refl2, refl3, refl4];
+        }
+        let r90 = self.rotated_90();
+        if *self != r90 {
+            let refl = self.reversed_ud();
+            if *self != refl {
+                let refl2 = r90.reversed_ud();
+                if *self != refl2 {
+                    return vec![r90, refl, refl2];
+                }
+                return vec![r90];
+            }
+            return vec![r90];
+        }
+        let refl = self.reversed_ud();
+        if *self == refl {
+            return vec![];
+        }
+        return vec![refl];
     }
 }
