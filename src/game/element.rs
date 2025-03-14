@@ -145,3 +145,100 @@ impl<T: Mask> Gcd for T {
         T::from_mask(self.to_mask() & other.to_mask())
     }
 }
+
+pub fn full_print_row(
+    height: usize,
+    width: usize,
+    cells: &[Vec<CellType>],
+    hlinks: &[Vec<LinkType>],
+    vlinks: &[Vec<LinkType>],
+    corners: &[Vec<CornerType>],
+    row: usize,
+    trim_left_and_right: bool,
+) {
+    assert!(row <= 4 * height);
+    let col_l = if trim_left_and_right { 1 } else { 0 };
+    let col_r = width - if trim_left_and_right { 1 } else { 0 };
+    if row % 4 == 0 {
+        let row = row / 4;
+        print!("+");
+        for col in col_l..col_r {
+            print!(
+                "{}+",
+                match hlinks[row][col] {
+                    LMaybe => ".......",
+                    Link => "=======",
+                    Unlink => "       ",
+                }
+            );
+        }
+        return;
+    }
+    if row % 4 == 2 {
+        let row = row / 4;
+        let print_vlink = |col: usize| {
+            print!(
+                "{}",
+                match vlinks[row][col] {
+                    LMaybe => ".",
+                    Link => "$",
+                    Unlink => " ",
+                }
+            );
+        };
+        let mut first = true;
+        for col in col_l..col_r {
+            if first {
+                print_vlink(col);
+                first = false;
+            }
+            print!(
+                "   {}   ",
+                match cells[row][col] {
+                    Empty => ' ',
+                    Zero => '0',
+                    One => '1',
+                    Two => '2',
+                    Three => '3',
+                }
+            );
+            print_vlink(col + 1);
+        }
+        return;
+    }
+    let row = row / 2;
+    let parity = row % 2;
+    let row = row / 2;
+    let print_vlink = |col: usize| {
+        print!(
+            "{}",
+            match vlinks[row][col] {
+                LMaybe => ".",
+                Link => "$",
+                Unlink => " ",
+            }
+        );
+    };
+    let mut first = true;
+    for col in col_l..col_r {
+        if first {
+            print_vlink(col);
+            first = false;
+        }
+        let to_char = |corner: CornerType| match corner {
+            CMaybe => ' ',
+            CZero => '0',
+            COne => '1',
+            CTwo => '2',
+            Even => 'E',
+            Less => 'L',
+            Greater => 'G',
+        };
+        print!(
+            " {}   {} ",
+            to_char(corners[2 * row + parity][2 * col]),
+            to_char(corners[2 * row + parity][2 * col + 1])
+        );
+        print_vlink(col + 1);
+    }
+}
