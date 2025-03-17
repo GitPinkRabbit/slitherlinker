@@ -67,7 +67,7 @@ impl Mask for CellType {
             2 => One,
             4 => Two,
             8 => Three,
-            _ => unreachable!(),
+            _ => panic!(),
         }
     }
 }
@@ -86,7 +86,7 @@ impl Mask for LinkType {
             3 => LMaybe,
             1 => Link,
             2 => Unlink,
-            _ => unreachable!(),
+            _ => panic!(),
         }
     }
 }
@@ -113,7 +113,7 @@ impl Mask for CornerType {
             5 => Even,
             3 => Less,
             6 => Greater,
-            _ => unreachable!(),
+            _ => panic!(),
         }
     }
 }

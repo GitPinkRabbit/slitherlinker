@@ -26,7 +26,7 @@ fn main() {
                                 name.trim().to_owned(),
                                 priority.trim().parse::<i32>().unwrap(),
                             ),
-                            _ => unreachable!(),
+                            _ => panic!(),
                         };
                     let content = strs[1].split("[END]").collect::<Vec<_>>()[0]
                         .trim()

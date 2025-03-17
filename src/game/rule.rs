@@ -31,7 +31,7 @@ impl HalfRule {
                     '1' => One,
                     '2' => Two,
                     '3' => Three,
-                    _ => unreachable!(),
+                    _ => panic!(),
                 }
             }
         }
@@ -44,7 +44,7 @@ impl HalfRule {
                     '.' => LMaybe,
                     '=' => Link,
                     ' ' => Unlink,
-                    _ => unreachable!(),
+                    _ => panic!(),
                 };
             }
         }
@@ -54,7 +54,7 @@ impl HalfRule {
                     '.' => LMaybe,
                     '$' => Link,
                     ' ' => Unlink,
-                    _ => unreachable!(),
+                    _ => panic!(),
                 };
             }
         }
@@ -68,7 +68,7 @@ impl HalfRule {
                     'E' => Even,
                     'L' => Less,
                     'G' => Greater,
-                    _ => unreachable!(),
+                    _ => panic!(),
                 };
             }
         }
