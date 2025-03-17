@@ -275,6 +275,7 @@ impl Rule {
         }
     }
 
+    #[allow(dead_code)]
     fn reversed_lr(&self) -> Rule {
         Rule {
             name: self.name.clone(),
